@@ -12,6 +12,7 @@ class RestaurantSeeder extends Seeder
      */
     public function run(): void
     {
+        Restaurant::truncate();
         Restaurant::factory(250)->create();
     }
 }
