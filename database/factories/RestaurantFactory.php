@@ -30,7 +30,7 @@ class RestaurantFactory extends Factory
             'cuisine' => fake()->word(),
             'price' => fake()->numberBetween(1, 5),
             'rating' => fake()->numberBetween(1, 5),
-            'location' => fake()->address(),
+            'location' => fake()->streetAddress(),
             'description' => fake()->optional(0.5, null)->sentence(),
         ];
     }
