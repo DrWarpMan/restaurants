@@ -16,9 +16,8 @@ class RestaurantSeeder extends Seeder
     {
         Schema::disableForeignKeyConstraints();
         Restaurant::truncate();
-        Schema::enableForeignKeyConstraints();
-
         BusinessHour::truncate();
+        Schema::enableForeignKeyConstraints();
         
         $restaurants = Restaurant::factory()
             ->count(100)
@@ -32,8 +31,8 @@ class RestaurantSeeder extends Seeder
                     ->create([
                         "restaurant_id" => $restaurant->id,
                         "day" => $day,
-                        "from" => fake()->numberBetween(0, 86400 / 2),
-                        "to" => fake()->numberBetween(86400 / 2 + 1, 86400),
+                        "opens" => fake()->numberBetween(0, 86400 / 2), // 0-12:00
+                        "closes" => fake()->numberBetween(86400 / 2 + 1, 86400), // 12:01-24:00
                     ]);
             }
         });

@@ -12,12 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('business_hours', function (Blueprint $table) {
+            $table->id();
             $table->foreignId("restaurant_id")->constrained()->cascadeOnDelete();
-            // TODO
-            $table->tinyInteger("day"); // 1-7
-            $table->integer("from"); // 0-86400
-            $table->integer("to"); // 0-86400
-            $table->timestamps();
+            $table->tinyInteger("day"); // 1-7 (1 = Monday, 7 = Sunday)
+            $table->integer("opens"); // represents second of the day 0-86400
+            $table->integer("closes"); // 0-86400
         });
     }
 
