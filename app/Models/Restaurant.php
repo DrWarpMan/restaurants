@@ -15,6 +15,8 @@ class Restaurant extends Model
      */
     public function businessHours(): HasMany
     {
-        return $this->hasMany(BusinessHour::class);
+        return $this->hasMany(BusinessHour::class)
+            ->orderBy('day', 'asc')
+            ->orderBy('opens', 'asc');
     }
 }
