@@ -22,4 +22,12 @@ class RestaurantController extends Controller
     {
         //
     }
+
+    /**
+     * Import new restaurant(s) via CSV.
+     */
+    public function import(Request $request)
+    {
+        //
+    }
 }
