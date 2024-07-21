@@ -5,7 +5,7 @@ namespace App\Http\Resources;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
-class RestaurantResource extends JsonResource
+class BusinessHourResource extends JsonResource
 {
     /**
      * Transform the resource into an array.
@@ -14,11 +14,7 @@ class RestaurantResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $parent = parent::toArray($request);
-
         // TODO
-        $parent["business_hours"] = BusinessHourResource::collection($this->businessHours);
-
-        return $parent;
+        return parent::toArray($request);
     }
 }
