@@ -14,11 +14,18 @@ class RestaurantResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $parent = parent::toArray($request);
-
-        // TODO
-        $parent["business_hours"] = BusinessHourResource::collection($this->businessHours);
-
-        return $parent;
+        return [
+            "id" => $this->id,
+            "name" => $this->name,
+            "restaurant_id" => $this->restaurant_id,
+            "cuisine" => $this->cuisine,
+            "price" => $this->price,
+            "rating" => $this->rating,
+            "location" => $this->location,
+            "description" => $this->description,
+            "created_at" => $this->created_at,
+            "updated_at" => $this->updated_at,
+            "business_hours" => BusinessHourResource::collection($this->businessHours),
+        ];
     }
 }
