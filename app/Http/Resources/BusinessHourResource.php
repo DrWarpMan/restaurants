@@ -20,6 +20,7 @@ class BusinessHourResource extends JsonResource
             "day" => $this->day,
             "opens" => $this->opens,
             "closes" => $this->closes,
+            "pretty" => $this->pretty(),
         ];
     }
 }
