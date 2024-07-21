@@ -20,7 +20,6 @@ return new class extends Migration
             $table->tinyInteger('rating')->nullable();
             $table->string('location')->nullable();
             $table->text('description')->nullable();
-            // TODO: business hours
             $table->timestamps();
         });
     }
