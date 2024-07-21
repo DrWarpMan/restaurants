@@ -2,8 +2,10 @@
 
 namespace Database\Seeders;
 
+use App\Models\BusinessHour;
 use App\Models\Restaurant;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Schema;
 
 class RestaurantSeeder extends Seeder
 {
@@ -12,7 +14,28 @@ class RestaurantSeeder extends Seeder
      */
     public function run(): void
     {
+        Schema::disableForeignKeyConstraints();
         Restaurant::truncate();
-        Restaurant::factory(250)->create();
+        Schema::enableForeignKeyConstraints();
+
+        BusinessHour::truncate();
+        
+        $restaurants = Restaurant::factory()
+            ->count(100)
+            ->create();
+
+        $restaurants->each(function (Restaurant $restaurant) {
+            $businessDays = fake()->randomElements(range(1, 7), null);
+
+            foreach ($businessDays as $day) {
+                BusinessHour::factory()
+                    ->create([
+                        "restaurant_id" => $restaurant->id,
+                        "day" => $day,
+                        "from" => fake()->numberBetween(0, 86400 / 2),
+                        "to" => fake()->numberBetween(86400 / 2 + 1, 86400),
+                    ]);
+            }
+        });
     }
 }
