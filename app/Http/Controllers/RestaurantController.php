@@ -12,9 +12,35 @@ class RestaurantController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(): JsonResource
+    public function index(Request $request): JsonResource
     {
-        return RestaurantResource::collection(Restaurant::paginate());
+        $open = $request->get('open', null) === "true";
+        $name = $request->get('name', null);
+        $cuisine = $request->get('cuisine', null);
+
+        $query = Restaurant::query();
+
+        if ($open) {
+            $today = now()->dayOfWeekIso;
+            $secondOfTheDay = now()->secondOfDay;
+
+            $query->whereHas('businessHours', function ($query) use ($today, $secondOfTheDay) {
+                $query
+                    ->where('day', $today)
+                    ->where('opens', '<=', $secondOfTheDay)
+                    ->where('closes', '>=', $secondOfTheDay);
+            });
+        }
+
+        if ($name !== null) {
+            $query->where('name', 'like', "%$name%");
+        }
+
+        if ($cuisine !== null) {
+            $query->where('cuisine', 'like', "%$cuisine%");
+        }
+
+        return RestaurantResource::collection($query->paginate(perPage: 10));
     }
 
     /**
