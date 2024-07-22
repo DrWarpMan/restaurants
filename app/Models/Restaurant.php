@@ -10,6 +10,16 @@ class Restaurant extends Model
 {
     use HasFactory;
 
+    protected $fillable = [
+        'name',
+        'restaurant_id',
+        'cuisine',
+        'price',
+        'rating',
+        'location',
+        'description',
+    ];
+
     /**
      * Get the business hours for the restaurant.
      */

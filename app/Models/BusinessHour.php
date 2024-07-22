@@ -9,6 +9,13 @@ use LogicException;
 class BusinessHour extends Model
 {
     use HasFactory;
+
+    protected $fillable = [
+        'restaurant_id',
+        'day',
+        'opens',
+        'closes',
+    ];
     
     public $timestamps = false;
 
