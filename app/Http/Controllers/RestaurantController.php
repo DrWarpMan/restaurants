@@ -4,8 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RestaurantResource;
 use App\Models\Restaurant;
+use App\Services\RestaurantImporter;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Http\UploadedFile;
 
 class RestaurantController extends Controller
 {
@@ -14,22 +17,28 @@ class RestaurantController extends Controller
      */
     public function index(Request $request): JsonResource
     {
-        $open = $request->get('open', null) === "true";
+        $status = $request->get('status', null);
         $name = $request->get('name', null);
         $cuisine = $request->get('cuisine', null);
 
         $query = Restaurant::query();
 
-        if ($open) {
+        if ($status) {
             $today = now()->dayOfWeekIso;
             $secondOfTheDay = now()->secondOfDay;
 
-            $query->whereHas('businessHours', function ($query) use ($today, $secondOfTheDay) {
+            $callback = function ($query) use ($today, $secondOfTheDay) {
                 $query
                     ->where('day', $today)
                     ->where('opens', '<=', $secondOfTheDay)
                     ->where('closes', '>=', $secondOfTheDay);
-            });
+            };
+
+            if($status === "open") {
+                $query->whereHas('businessHours', $callback);
+            } else if($status === "closed") {
+                $query->whereDoesntHave('businessHours', $callback);
+            }
         }
 
         if ($name !== null) {
