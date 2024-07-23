@@ -61,10 +61,33 @@ class RestaurantController extends Controller
     }
 
     /**
-     * Import new restaurant(s) via CSV.
+     * Import new restaurant(s) via CSV file.
      */
-    public function import(Request $request)
+    public function import(Request $request, RestaurantImporter $importer): JsonResponse
     {
-        //
+        $request->validate([
+            'file' => 'required|file|mimes:csv|extensions:csv|max:3000',
+        ]);
+
+        $file = $request->file('file');
+
+        if (is_array($file)) {
+            return response()->json(['message' => 'Only one file allowed'], 400);
+        }
+
+        /** @var UploadedFile $file */
+
+        $content = $file->get();
+
+        if ($content === false) {
+            return response()->json(['message' => 'Failed to read file'], 500);
+        }
+
+        $imported = $importer->import($content);
+
+        return response()->json([
+            'success' => true,
+            'imported' => $imported,
+        ], 200);
     }
 }
