@@ -10,6 +10,7 @@ cp .env.example .env # edit if necessary, namely WWWUSER & WWWGROUP and database
 ./vendor/bin/sail artisan key:generate
 ./vendor/bin/sail up -d
 ./vendor/bin/sail artisan migrate:fresh
+./vendor/bin/sail artisan db:seed # optional
 ```
 
 API should be available at endpoints described below.
