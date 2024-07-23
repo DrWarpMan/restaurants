@@ -7,6 +7,7 @@ namespace App\Tools\BusinessHour;
 use App\Models\BusinessHour;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use InvalidArgumentException;
 use Throwable;
 
 class Util
@@ -84,6 +85,70 @@ class Util
         }
 
         return true;
+    }
+
+    /**
+     * Creates multiple business hours at once. Validates and saves them to the database.
+     * 
+     * @param int $restaurantId Restaurant ID to create business hours for.
+     * @param array $days Array of unique integers representing days of the week (1-7, 1 = Monday, 7 = Sunday).
+     * @param int $opensAt Opening time. In seconds since midnight (0-86399).
+     * @param int $closesAt Closing time. In seconds since midnight (1-86400). Can be less or equal to $opensAt - will be treated as closing on the next day ("overflow").
+     * @throws ValidationException
+     * @throws InvalidArgumentException out-of-range values
+     * @see Util::createWithValidation()
+     */
+    public static function createMultiple(int $restaurantId, array $days, int $opensAt, int $closesAt): void
+    {
+        if($opensAt < 0 || $opensAt > 86399) {
+            throw new InvalidArgumentException('Invalid opening time. Must be an integer between 0 and 86399.');
+        }
+
+        if($closesAt < 1 || $closesAt > 86400) {
+            throw new InvalidArgumentException('Invalid closing time. Must be an integer between 1 and 86400.');
+        }
+
+        foreach($days as $day) {
+            if(!is_int($day) || $day < 1 || $day > 7) {
+                throw new InvalidArgumentException('Invalid day of the week. Must be an integer between 1 and 7.');
+            }
+
+            // When restaurant is open past midnight and "overflows" to the next day
+            // (e.g. [12:00 pm - 1:00 am] => [43200, 3600] OR [5:00 am - 5:00 am] => [18000, 18000])
+            if ($closesAt <= $opensAt) {
+                $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
+                    Util::createWithValidation([
+                        'restaurant_id' => $restaurantId,
+                        'day' => $day,
+                        'opens' => $opensAt,
+                        'closes' => 86400,
+                    ]);
+
+                    $tomorrow = ($day % 7) + 1;
+
+                    Util::createWithValidation([
+                        'restaurant_id' => $restaurantId,
+                        'day' => $tomorrow,
+                        'opens' => 0,
+                        'closes' => $closesAt,
+                    ]);
+                };
+            // When restaurant opens and closes on the same day
+            } else {
+                $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
+                    Util::createWithValidation([
+                        'restaurant_id' => $restaurantId,
+                        'day' => $day,
+                        'opens' => $opensAt,
+                        'closes' => $closesAt,
+                    ]);
+                };
+            }
+
+            foreach($days as $day) {
+                $callback($day);
+            }
+        }
     }
 
     /**
