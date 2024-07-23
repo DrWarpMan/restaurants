@@ -15,7 +15,7 @@ class RestaurantImporter
     /**
      * Import new restaurant(s) via CSV string.
      * 
-     * @return int The number of rows imported
+     * @return int The number of restaurants imported.
      */
     public function import(string $csv): int
     {
@@ -34,6 +34,8 @@ class RestaurantImporter
             default => throw new Exception('Unsupported import content format'),
         };
 
+        $counter = 0;
+
         DB::beginTransaction();
         
         try {
@@ -47,6 +49,7 @@ class RestaurantImporter
                 }
 
                 $importer->importRow($columns);
+                $counter++;
             }
 
             DB::commit();
@@ -55,7 +58,7 @@ class RestaurantImporter
             throw $e;
         }
 
-        return $rowCount;
+        return $counter;
     }
 
     private function lineToArray(string $line): array
