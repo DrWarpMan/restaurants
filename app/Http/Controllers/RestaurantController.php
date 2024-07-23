@@ -68,7 +68,7 @@ class RestaurantController extends Controller
     public function import(Request $request, RestaurantImporter $importer): JsonResponse
     {
         $request->validate([
-            'file' => 'required|file|mimes:csv|extensions:csv|max:3000',
+            'file' => 'required|file|extensions:csv|max:3000',
         ]);
 
         $file = $request->file('file');
