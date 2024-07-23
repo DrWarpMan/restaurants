@@ -13,8 +13,8 @@ class Validator
     private const RULES = [
         'restaurant_id' => ['required', 'integer'],
         'day' => ['required', 'integer', 'min:1', 'max:7'],
-        'opens' => ['required', 'integer', 'min:0', 'max:86400'],
-        'closes' => ['required', 'integer', 'min:0', 'max:86400'],
+        'opens' => ['required', 'integer', 'min:0', 'max:86399'],
+        'closes' => ['required', 'integer', 'min:1', 'max:86400'],
     ];
 
     public function __construct(
