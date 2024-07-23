@@ -27,15 +27,14 @@ class Validator
      * Check if the business hour overlaps with any other business hour record
      * for the same restaurant and day.
      * 
-     * Works only if the provided business hour is valid.
+     * Note: This method assumes that the provided business hour is valid.
      */
     private function hasOverlap(): bool
     {
-        // If we know the 2 provided intervals are valid (A_from < A_to && B_from < B_to),
-        // we can be sure that intervals don't overlap if:
-        // interval A starts AFTER interval B ends
-        // OR
-        // interval A ends BEFORE interval B starts
+        // If 2 provided intervals are valid (A_from < A_to && B_from < B_to),
+        // we can be sure that intervals don't overlap if one of the following is true:
+        // - interval A starts AFTER interval B ends
+        // - interval A ends BEFORE interval B starts
 
         return BusinessHour::where('restaurant_id', $this->businessHour->restaurant_id)
             ->where('day', $this->businessHour->day)
@@ -47,7 +46,7 @@ class Validator
     }
 
     /**
-     * Validate the business hour data. Checks if the interval is valid and doesn't overlap with other business hours.
+     * Validate the business hour data. Checks for invalid intervals, or overlaps with other business hours.
      * 
      * @throws ValidationException
      */
