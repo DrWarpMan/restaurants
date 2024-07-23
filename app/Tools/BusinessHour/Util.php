@@ -26,11 +26,12 @@ class Util
     }
 
     /**
-     * Merge overlapping business hours.
+     * Tries to merge adjacent business hours for a restaurant. Uses transaction to ensure data integrity.
      * 
-     * @param string $restaurantId Restaurant ID to merge business hours for.
+     * @param int $restaurantId Restaurant ID to merge business hours for.
+     * @return bool True if any business hours were merged, false otherwise.
      */
-    public static function mergeBusinessHours(string $restaurantId): void {
+    public static function mergeBusinessHours(int $restaurantId): bool {
         $businessHours = BusinessHour::where('restaurant_id', $restaurantId)
             ->orderBy('day', 'asc')
             ->orderBy('opens', 'asc')
@@ -60,7 +61,10 @@ class Util
 
         $merged[] = $last;
 
-        // Merge
+        // Merged anything?
+        if (count($toDelete) === 0) {
+            return false;
+        }
 
         DB::beginTransaction();
 
@@ -78,6 +82,8 @@ class Util
             DB::rollBack();
             throw $e;
         }
+
+        return true;
     }
 
     /**
