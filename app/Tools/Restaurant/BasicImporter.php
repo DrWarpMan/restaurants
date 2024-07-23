@@ -26,8 +26,6 @@ class BasicImporter implements Importer
         $restaurant->save();
 
         $this->importBusinessHours($restaurant, $columns[1] ?? '');
-
-        Util::mergeBusinessHours($restaurant->id);
     }
 
     /**
@@ -56,48 +54,10 @@ class BasicImporter implements Importer
             // Convert time to seconds of the day
             [$timeStart, $timeEnd] = $this->processTime($matches[2]); // e.g.: [41400, 75600]
 
-            // When restaurant is open past midnight and "overflows" to the next day
-            // (e.g. [12:00 pm - 1:00 am] => [43200, 3600])
-            if ($timeEnd <= $timeStart) {
-                $callback = function($day) use ($timeStart, $timeEnd, $restaurant) {
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurant->id,
-                        'day' => $day,
-                        'opens' => $timeStart,
-                        'closes' => 86400,
-                    ]);
-
-                    // Edge case when restaurant closes at exactly midnight
-                    // (e.g. [1:00 am - 12:00 am] => [3600, 0] OR [12:00 am - 12:00 am] => [0, 0])
-                    if($timeEnd === 0) {
-                        return;
-                    }
-
-                    $tomorrow = ($day % 7) + 1;
-
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurant->id,
-                        'day' => $tomorrow,
-                        'opens' => 0,
-                        'closes' => $timeEnd,
-                    ]);
-                };
-            // When restaurant opens and closes on the same day
-            } else {
-                $callback = function($day) use ($timeStart, $timeEnd, $restaurant) {
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurant->id,
-                        'day' => $day,
-                        'opens' => $timeStart,
-                        'closes' => $timeEnd,
-                    ]);
-                };
-            }
-
-            foreach($days as $day) {
-                $callback($day);
-            }
+            Util::createMultiple($restaurant->id, $days, $timeStart, $timeEnd);
         }
+        
+        Util::mergeBusinessHours($restaurant->id);
     }
 
     /**
@@ -149,7 +109,7 @@ class BasicImporter implements Importer
      * Extract time range from the provided input.
      * 
      * @param string $input e.g. "12:00 am - 12:00 pm"
-     * @return array{int, int} Returns a 2-element tuple [start time in seconds, end time in seconds]
+     * @return array{int, int} Returns a 2-element tuple with start and end time in seconds of the day.
      */
     private function processTime(string $input): array
     {
@@ -167,6 +127,10 @@ class BasicImporter implements Importer
 
         $timeStartSeconds = $this->convertTimeToSeconds($timeStart); // 0
         $timeEndSeconds = $this->convertTimeToSeconds($timeEnd); // 43200
+
+        if($timeEndSeconds === 0) {
+            $timeEndSeconds = 86400;
+        }
 
         return [$timeStartSeconds, $timeEndSeconds];
     }

@@ -33,8 +33,6 @@ class FullImporter implements Importer
             $columns[4] ?? '',
             $columns[5] ?? ''
         );
-
-        Util::mergeBusinessHours($restaurant->id);
     }
 
     /**
@@ -49,46 +47,9 @@ class FullImporter implements Importer
         string $closes, // 17:00:00
         string $daysOpen // Mo,Tu,We,Fr,Sa
     ) {
-        // Convert times to seconds of the day
-        [$timeStart, $timeEnd] = [$this->processTime($opens), $this->processTime($closes)];
-
-        // When restaurant is open past midnight and "overflows" to the next day
-        // (e.g. [12:00 pm - 1:00 am] => [43200, 3600])
-        if ($timeEnd <= $timeStart) {
-            $callback = function($day) use ($timeStart, $timeEnd, $restaurant) {
-                Util::createWithValidation([
-                    'restaurant_id' => $restaurant->id,
-                    'day' => $day,
-                    'opens' => $timeStart,
-                    'closes' => 86400,
-                ]);
-
-                // Edge case when restaurant closes at exactly midnight
-                // (e.g. [1:00 am - 12:00 am] => [3600, 0] OR [12:00 am - 12:00 am] => [0, 0])
-                if($timeEnd === 0) {
-                    return;
-                }
-
-                $tomorrow = ($day % 7) + 1;
-
-                Util::createWithValidation([
-                    'restaurant_id' => $restaurant->id,
-                    'day' => $tomorrow,
-                    'opens' => 0,
-                    'closes' => $timeEnd,
-                ]);
-            };
-        // When restaurant opens and closes on the same day
-        } else {
-            $callback = function($day) use ($timeStart, $timeEnd, $restaurant) {
-                Util::createWithValidation([
-                    'restaurant_id' => $restaurant->id,
-                    'day' => $day,
-                    'opens' => $timeStart,
-                    'closes' => $timeEnd,
-                ]);
-            };
-        }
+        // Convert days to integers
+         
+        $days = [];
 
         foreach (explode(",", $daysOpen) as $day) {
             $dayInt = Util::dayToInt($day);
@@ -96,9 +57,20 @@ class FullImporter implements Importer
             if ($dayInt === false) {
                 throw new Exception("Invalid day");
             }
-
-            $callback($dayInt);
+            
+            $days[] = $dayInt;
         }
+
+        // Convert times to seconds of the day
+        [$timeStart, $timeEnd] = [$this->processTime($opens), $this->processTime($closes)];
+
+        if($timeEnd === 0) {
+            $timeEnd = 86400;
+        }
+
+        Util::createMultiple($restaurant->id, $days, $timeStart, $timeEnd);
+
+        Util::mergeBusinessHours($restaurant->id);
     }
 
     /**
