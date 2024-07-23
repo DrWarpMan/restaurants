@@ -108,46 +108,51 @@ class Util
             throw new InvalidArgumentException('Invalid closing time. Must be an integer between 1 and 86400.');
         }
 
+        if(count($days) > 7) {
+            throw new InvalidArgumentException('Invalid number of days. Must be an array of unique integers between 1 and 7.');
+        }
+
         foreach($days as $day) {
             if(!is_int($day) || $day < 1 || $day > 7) {
                 throw new InvalidArgumentException('Invalid day of the week. Must be an integer between 1 and 7.');
             }
+        }
 
-            // When restaurant is open past midnight and "overflows" to the next day
-            // (e.g. [12:00 pm - 1:00 am] => [43200, 3600] OR [5:00 am - 5:00 am] => [18000, 18000])
-            if ($closesAt <= $opensAt) {
-                $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurantId,
-                        'day' => $day,
-                        'opens' => $opensAt,
-                        'closes' => 86400,
-                    ]);
+        // When restaurant is open past midnight and "overflows" to the next day
+        // (e.g. [12:00 pm - 1:00 am] => [43200, 3600] OR [5:00 am - 5:00 am] => [18000, 18000])
+        if ($closesAt <= $opensAt) {
+            $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
+                Util::createWithValidation([
+                    'restaurant_id' => $restaurantId,
+                    'day' => $day,
+                    'opens' => $opensAt,
+                    'closes' => 86400,
+                ]);
 
-                    $tomorrow = ($day % 7) + 1;
+                $tomorrow = ($day % 7) + 1;
 
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurantId,
-                        'day' => $tomorrow,
-                        'opens' => 0,
-                        'closes' => $closesAt,
-                    ]);
-                };
-            // When restaurant opens and closes on the same day
-            } else {
-                $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
-                    Util::createWithValidation([
-                        'restaurant_id' => $restaurantId,
-                        'day' => $day,
-                        'opens' => $opensAt,
-                        'closes' => $closesAt,
-                    ]);
-                };
-            }
+                Util::createWithValidation([
+                    'restaurant_id' => $restaurantId,
+                    'day' => $tomorrow,
+                    'opens' => 0,
+                    'closes' => $closesAt,
+                ]);
+            };
+        // When restaurant opens and closes on the same day
+        // (e.g. [9:00 am - 5:00 pm] => [32400, 61200])
+        } else {
+            $callback = function($day) use ($opensAt, $closesAt, $restaurantId) {
+                Util::createWithValidation([
+                    'restaurant_id' => $restaurantId,
+                    'day' => $day,
+                    'opens' => $opensAt,
+                    'closes' => $closesAt,
+                ]);
+            };
+        }
 
-            foreach($days as $day) {
-                $callback($day);
-            }
+        foreach($days as $day) {
+            $callback($day);
         }
     }
 
