@@ -18,7 +18,7 @@
 
 **Example:**
 ```bash
-curl --location 'http://localhost/api/restaurants?page=1&status=all&name=&cuisine=' \
+curl -L 'http://localhost/api/restaurants?page=1&status=open' \
 --header 'Accept: application/json'
 ```
 
@@ -30,7 +30,7 @@ curl --location 'http://localhost/api/restaurants?page=1&status=all&name=&cuisin
 
 **Example:**
 ```bash
-curl --location 'http://localhost/api/restaurants/1' \
+curl -L 'http://localhost/api/restaurants/1' \
 --header 'Accept: application/json'
 ```
 
@@ -49,6 +49,6 @@ curl --location 'http://localhost/api/restaurants/1' \
 
 **CURL example:**
 ```bash
-curl --location 'http://localhost/api/restaurants/import' \
+curl -L 'http://localhost/api/restaurants/import' \
 --header 'Accept: application/json' \
 --form 'file=@"/path/to/restaurants.csv"'
