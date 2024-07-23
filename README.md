@@ -1,5 +1,19 @@
 # Restaurants
 
+## Quick Start (Local Development)
+
+```bash
+git clone https://github.com/DrWarpMan/restaurants.git
+cd restaurants
+composer install
+cp .env.example .env # edit if necessary, namely WWWUSER & WWWGROUP and database settings
+./vendor/bin/sail artisan key:generate
+./vendor/bin/sail up -d
+./vendor/bin/sail artisan migrate:fresh
+```
+
+API should be available at endpoints described below.
+
 ## API Documentation
 
 ### Endpoints
@@ -42,7 +56,6 @@ curl -L 'http://localhost/api/restaurants/1' \
 
 **Form Data:**
 
-
 | Key  | Value | Description |
 | --- | --- | --- |
 | file  | File | The .csv file containing the restaurants to import. |
@@ -52,3 +65,4 @@ curl -L 'http://localhost/api/restaurants/1' \
 curl -L 'http://localhost/api/restaurants/import' \
 --header 'Accept: application/json' \
 --form 'file=@"/path/to/restaurants.csv"'
+```
