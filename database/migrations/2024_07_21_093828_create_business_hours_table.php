@@ -16,9 +16,9 @@ return new class extends Migration
         Schema::create('business_hours', function (Blueprint $table) {
             $table->id();
             $table->foreignId("restaurant_id")->constrained()->cascadeOnDelete();
-            $table->tinyInteger("day"); // 1-7 (1 = Monday, 7 = Sunday)
-            $table->integer("opens"); // represents second of the day 0-86400
-            $table->integer("closes"); // 0-86400
+            $table->tinyInteger("day");
+            $table->integer("opens"); 
+            $table->integer("closes");
         });
     }
 
