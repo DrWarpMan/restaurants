@@ -8,6 +8,7 @@ use App\Models\Restaurant;
 use App\Tools\BusinessHour\Util;
 use Exception;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class BasicImporter implements Importer
 {
@@ -31,6 +32,7 @@ class BasicImporter implements Importer
     /**
      * @param Restaurant $restaurant Restaurant to import business hours for.
      * @param string $input Example input: "Mon-Thu, Sun 11:30 am - 9 pm / Fri-Sat 11:30 am - 3:30 am"
+     * @throws ValidationException
      */
     private function importBusinessHours(
         Restaurant $restaurant,
@@ -46,7 +48,7 @@ class BasicImporter implements Importer
             $result = preg_match('/^(.+?)\s+(\d.*)$/', $part, $matches);
 
             if($result !== 1) {
-                throw new Exception('Invalid business hours format');
+                throw ValidationException::withMessages(['Invalid business hours format']);
             }
             
             // Convert days to integers, and "unzip" ranges (e.g. "Mon, Wed-Sat" => [1,3,4,5,6])
@@ -65,6 +67,7 @@ class BasicImporter implements Importer
      * 
      * @param string $input Example input: "Mon, Wed-Sat"
      * @return array<int> Returns an array of integers representing days (1-7), sorted in ascending order. E.g. [1,3,4,5,6]
+     * @throws ValidationException
      */
     private function processDays(string $input): array
     {   
@@ -78,7 +81,7 @@ class BasicImporter implements Importer
             $result = preg_match('/^([a-zA-Z]{3})(?:-([a-zA-Z]{3}))?$/', $split, $matches);
 
             if($result !== 1) {
-                throw new Exception('Could not parse day range');
+                throw ValidationException::withMessages(['Invalid day format']);
             }
 
             $dayStart = $matches[1];
@@ -88,11 +91,11 @@ class BasicImporter implements Importer
             $dayEndInt = Util::dayToInt($dayEnd);
 
             if($dayStartInt === false || $dayEndInt === false) {
-                throw new Exception('Invalid day, could not convert to integer');
+                throw ValidationException::withMessages(['Invalid day name']);
             }
 
             if($dayStartInt > $dayEndInt) {
-                throw new Exception('Invalid day range, start day is greater than end day');
+                throw ValidationException::withMessages(['Invalid day range']);
             }
 
             for($i = $dayStartInt; $i <= $dayEndInt; $i++) {
@@ -110,6 +113,7 @@ class BasicImporter implements Importer
      * 
      * @param string $input e.g. "12:00 am - 12:00 pm"
      * @return array{int, int} Returns a 2-element tuple with start and end time in seconds of the day.
+     * @throws ValidationException
      */
     private function processTime(string $input): array
     {
@@ -119,7 +123,7 @@ class BasicImporter implements Importer
 
         // There should be exactly 2 time strings (start & end)
         if ($result !== 2) {
-            throw new Exception('Invalid time format');
+            throw ValidationException::withMessages(['Invalid time format']);
         }
 
         $timeStart = $matches[0][0]; // 12:00 am
@@ -140,6 +144,7 @@ class BasicImporter implements Importer
      * 
      * @param string $input 12-hour format (from '0:00 am' to '11:59 pm').
      * @return int Returns integer between 0-86399.
+     * @throws ValidationException
      */
     private function convertTimeToSeconds(string $input): int {
         // am/pm is case-insensitive
@@ -153,11 +158,11 @@ class BasicImporter implements Importer
         $minutes = (int) ($hoursMinutes[1] ?? 0);
 
         if($hours < 1 || $hours > 12) {
-            throw new Exception('Invalid hour');
+            throw ValidationException::withMessages(['Invalid hour']);
         }
 
         if($minutes < 0 || $minutes > 59) {
-            throw new Exception('Invalid minute');
+            throw ValidationException::withMessages(['Invalid minute']);
         }
 
         if($hours === 12) {

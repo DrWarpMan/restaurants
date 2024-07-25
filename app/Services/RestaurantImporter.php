@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Throwable;
 use App\Tools\Restaurant\FullImporter;
 use App\Tools\Restaurant\BasicImporter;
+use Illuminate\Validation\ValidationException;
 
 class RestaurantImporter
 {
@@ -16,6 +17,7 @@ class RestaurantImporter
      * Import new restaurant(s) via CSV string.
      * 
      * @return int The number of restaurants imported.
+     * @throws ValidationException
      */
     public function import(string $csv): int
     {
@@ -23,7 +25,7 @@ class RestaurantImporter
         $rowCount = count($lines);
 
         if($rowCount === 0) {
-            throw new Exception('Invalid/empty CSV file');
+            throw ValidationException::withMessages(['file' => 'The CSV file is empty']);
         }
 
         $columnCount = count($this->lineToArray($lines[0]));
@@ -31,7 +33,9 @@ class RestaurantImporter
         $importer = match($columnCount) {
             10 => new FullImporter(),
             2 => new BasicImporter(),
-            default => throw new Exception('Unsupported import content format'),
+            default => throw ValidationException::withMessages([
+                'file' => 'Unsupported CSV import format',
+            ]),
         };
 
         $counter = 0;

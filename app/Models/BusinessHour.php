@@ -36,7 +36,7 @@ class BusinessHour extends Model
             5 => 'Fri',
             6 => 'Sat',
             7 => 'Sun',
-            default => throw new LogicException("Invalid day")
+            default => throw new LogicException("Cannot convert day {$this->day} to a string."),
         };
     }
 

@@ -8,6 +8,7 @@ use App\Models\Restaurant;
 use App\Tools\BusinessHour\Util;
 use Exception;
 use App\Tools\Restaurant\Validator;
+use Illuminate\Validation\ValidationException;
 
 class FullImporter implements Importer
 {
@@ -40,6 +41,7 @@ class FullImporter implements Importer
      * @param string $opens e.g. 9:00:00
      * @param string $closes e.g. 17:00:00
      * @param string $daysOpen e.g. Mo,Tu,We,Fr,Sa
+     * @throws ValidationException
      */
     private function importBusinessHours(
         Restaurant $restaurant,
@@ -55,7 +57,7 @@ class FullImporter implements Importer
             $dayInt = Util::dayToInt($day);
 
             if ($dayInt === false) {
-                throw new Exception("Invalid day");
+                throw ValidationException::withMessages(['Invalid day name']);
             }
             
             $days[] = $dayInt;
@@ -78,6 +80,7 @@ class FullImporter implements Importer
      * 
      * @param string $input 24-hour format (from '0:00:00' to '23:59:59').
      * @return int Returns integer between 0-86399.
+     * @throws ValidationException
      */
     private function processTime(string $input): int
     {
@@ -85,7 +88,7 @@ class FullImporter implements Importer
         $result = preg_match('/^(\d{1,2}):(\d{2}):(\d{2})$/', $input, $matches);
 
         if ($result !== 1) {
-            throw new Exception("Invalid time format");
+            throw ValidationException::withMessages(['Invalid time format']);
         }
 
         $hour = (int) $matches[1];
@@ -93,15 +96,15 @@ class FullImporter implements Importer
         $second = (int) $matches[3];
 
         if ($hour < 0 || $hour > 23) {
-            throw new Exception("Invalid hour: $hour");
+            throw ValidationException::withMessages(['Invalid hour']);
         }
 
         if ($minute < 0 || $minute > 59) {
-            throw new Exception("Invalid minute: $minute");
+            throw ValidationException::withMessages(['Invalid minute']);
         }
 
         if ($second < 0 || $second > 59) {
-            throw new Exception("Invalid second: $second");
+            throw ValidationException::withMessages(['Invalid second']); 
         }
 
         return $hour * 3600 + $minute * 60 + $second;

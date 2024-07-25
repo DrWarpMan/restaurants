@@ -95,26 +95,30 @@ class Util
      * @param int $opensAt Opening time. In seconds since midnight (0-86399).
      * @param int $closesAt Closing time. In seconds since midnight (1-86400). Can be less or equal to $opensAt - will be treated as closing on the next day ("overflow").
      * @throws ValidationException
-     * @throws InvalidArgumentException out-of-range values
+     * @throws InvalidArgumentException
      * @see Util::createWithValidation()
      */
     public static function createMultiple(int $restaurantId, array $days, int $opensAt, int $closesAt): void
     {
         if($opensAt < 0 || $opensAt > 86399) {
-            throw new InvalidArgumentException('Invalid opening time. Must be an integer between 0 and 86399.');
+            throw new InvalidArgumentException("'opensAt' must be an integer between 0 and 86399.");
         }
 
         if($closesAt < 1 || $closesAt > 86400) {
-            throw new InvalidArgumentException('Invalid closing time. Must be an integer between 1 and 86400.');
+            throw new InvalidArgumentException("'closesAt' must be an integer between 1 and 86400.");
         }
 
         if(count($days) > 7) {
-            throw new InvalidArgumentException('Invalid number of days. Must be an array of unique integers between 1 and 7.');
+            throw new InvalidArgumentException("'days' array must not contain more than 7 values.");
+        }
+
+        if(array_unique($days) !== $days) {
+            throw new InvalidArgumentException("'days' array must contain unique values.");
         }
 
         foreach($days as $day) {
             if(!is_int($day) || $day < 1 || $day > 7) {
-                throw new InvalidArgumentException('Invalid day of the week. Must be an integer between 1 and 7.');
+                throw new InvalidArgumentException("'days' array must contain integers between 1 and 7.");
             }
         }
 

@@ -58,14 +58,13 @@ class Validator
 
         if (!$this->hasValidInterval()) {
             throw ValidationException::withMessages([
-                'opens' => 'The opening time must be before the closing time.',
-                'closes' => 'The closing time must be after the opening time.'
+                'opens' => 'The opening time must be lower than the closing time.',
             ]);
         }
 
         if ($this->hasOverlap()) {
             throw ValidationException::withMessages([
-                'opens' => 'The business hours overlap with other business hours.',
+                "The business hour overlaps with another business hour.",
             ]);
         }
     }
