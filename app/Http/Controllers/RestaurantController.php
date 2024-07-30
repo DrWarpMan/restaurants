@@ -6,7 +6,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Resources\RestaurantResource;
 use App\Models\Restaurant;
-use App\Services\RestaurantImporter;
+use App\Services\RestaurantImportHandler;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -65,7 +65,7 @@ class RestaurantController extends Controller
     /**
      * Import new restaurant(s) via CSV file.
      */
-    public function import(Request $request, RestaurantImporter $importer): JsonResponse
+    public function import(Request $request, RestaurantImportHandler $importHandler): JsonResponse
     {
         $request->validate([
             'file' => 'required|file|extensions:csv|max:3000',
@@ -78,14 +78,8 @@ class RestaurantController extends Controller
         }
 
         /** @var UploadedFile $file */
-
-        $content = $file->get();
-
-        if ($content === false) {
-            return response()->json(['message' => 'Failed to read file'], 500);
-        }
-
-        $imported = $importer->import($content);
+        
+        $imported = $importHandler->import($file);
 
         return response()->json([
             'success' => true,
